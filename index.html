@@ -183,8 +183,8 @@
                 }
             }, [activeTab]);
 
-            // --- SEND CONFIRMATION ---
-            const sendHelp = (targetId) => {
+            // --- SEND CONFIRMATION (ACK) ---
+            const sendAck = (targetId) => {
                 if (!client || !isConnected) return;
                 
                 const message = new Paho.MQTT.Message("CONFIRM_HELP");
@@ -196,6 +196,18 @@
                 setAlerts(prev => prev.map(a => 
                     a.id === targetId ? { ...a, status: 'HELP SENT' } : a
                 ));
+            };
+
+            // --- SEND CUSTOM MESSAGE ---
+            const sendMessage = (targetId) => {
+                if (!client || !isConnected) return;
+                const text = prompt(`Enter message for ${targetId}:`, "Stay Calm. Help is coming.");
+                if (text && text.trim() !== "") {
+                    const message = new Paho.MQTT.Message("MSG:" + text);
+                    message.destinationName = TOPIC_RESPONSE;
+                    client.send(message);
+                    alert("Message Sent!");
+                }
             };
 
             const getStatusColor = (status) => {
@@ -259,14 +271,24 @@
                                             </div>
                                             
                                             <div className="mt-3 flex space-x-2">
+                                                {/* Route Button */}
                                                 {alert.status !== 'NO_GPS' ? (
-                                                    <a href={`https://www.google.com/maps/dir/?api=1&destination=${alert.lat},${alert.lon}`} target="_blank" className="flex-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 py-2 rounded text-center text-sm font-bold">
+                                                    <a href={`https://www.google.com/maps/dir/?api=1&destination=${alert.lat},${alert.lon}`} target="_blank" className="flex-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 py-2 rounded text-center text-sm font-bold flex items-center justify-center">
                                                         <i className="fas fa-location-arrow mr-1"></i> ROUTE
                                                     </a>
                                                 ) : (
                                                     <button disabled className="flex-1 bg-gray-200 text-gray-400 py-2 rounded text-center text-sm font-bold cursor-not-allowed"><i className="fas fa-ban mr-1"></i> NO ROUTE</button>
                                                 )}
-                                                <button onClick={() => sendHelp(alert.id)} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-center text-sm font-bold shadow-sm"><i className="fas fa-check-circle mr-1"></i> ACKNOWLEDGE</button>
+                                                
+                                                {/* Message Button */}
+                                                <button onClick={() => sendMessage(alert.id)} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-center text-sm font-bold shadow-sm flex items-center justify-center">
+                                                    <i className="fas fa-comment-alt mr-1"></i> MSG
+                                                </button>
+
+                                                {/* ACK Button */}
+                                                <button onClick={() => sendAck(alert.id)} className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded text-center text-sm font-bold shadow-sm flex items-center justify-center">
+                                                    <i className="fas fa-check-circle mr-1"></i> ACK
+                                                </button>
                                             </div>
                                         </div>
                                     ))
